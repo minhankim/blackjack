@@ -846,7 +846,7 @@ function startBGM(mode){
   if(mode==='lobby'){game.pause();game.currentTime=0;}
   else{lobby.pause();lobby.currentTime=0;}
   var el=mode==='lobby'?lobby:game;
-  el.volume=mode==='lobby'?0.5:0.09;
+  el.volume=mode==='lobby'?0.5:0.04;
   bgmCurrent=mode;
   var p=el.play();
   if(p&&p.catch)p.catch(function(){});
