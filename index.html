@@ -7,9 +7,9 @@
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;700;900&family=Oswald:wght@400;600;700&display=swap');
 *{margin:0;padding:0;box-sizing:border-box;user-select:none}
-html,body{height:100%;overflow:hidden}
+html,body{height:100%;overflow:hidden;position:fixed;inset:0}
 body{font-family:'Noto Sans KR',sans-serif;background:#0a0a0a;color:#fff}
-.game{width:100%;height:100vh;height:100dvh;display:flex;flex-direction:column;position:relative;overflow:hidden}
+.game{width:100%;height:100%;display:flex;flex-direction:column;position:fixed;inset:0;overflow:hidden}
 
 /* ===== START SCREEN ===== */
 .start-screen{position:fixed;inset:0;z-index:100;
@@ -225,7 +225,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:#0a0a0a;color:#fff}
   background:rgba(255,255,255,.5)}
 
 .card-deal{animation:none}
-.card-flying-from-shoe{position:fixed;z-index:998;pointer-events:none;transition:left .4s ease-out,top .4s ease-out,transform .4s ease-out,opacity .15s ease}
+.card-flying-from-shoe{position:fixed;z-index:998;pointer-events:none;transition:left .38s ease-out,top .38s ease-out,transform .38s ease-out,opacity .13s ease}
 
 /* 3D flip */
 .card-flip-container{width:64px;height:88px;perspective:600px;display:inline-block}
@@ -723,12 +723,12 @@ body{font-family:'Noto Sans KR',sans-serif;background:#0a0a0a;color:#fff}
 
   <div class="bottom-bar">
     <div class="bet-bar" id="betBar">
-      <div class="chip-btn chip-teal" onclick="addBet(1000)">1<span class="won">천원</span></div>
-      <div class="chip-btn chip-blue" onclick="addBet(5000)">5<span class="won">천원</span></div>
-      <div class="chip-btn chip-red" onclick="addBet(10000)">1<span class="won">만원</span></div>
-      <div class="chip-btn chip-gold" onclick="addBet(50000)">5<span class="won">만원</span></div>
-      <div class="chip-btn chip-purple" onclick="addBet(100000)">10<span class="won">만원</span></div>
-      <div class="chip-btn chip-black" onclick="addBet(500000)">50<span class="won">만원</span></div>
+      <div class="chip-btn chip-teal" onclick="addBet(1000,this)">1<span class="won">천원</span></div>
+      <div class="chip-btn chip-blue" onclick="addBet(5000,this)">5<span class="won">천원</span></div>
+      <div class="chip-btn chip-red" onclick="addBet(10000,this)">1<span class="won">만원</span></div>
+      <div class="chip-btn chip-gold" onclick="addBet(50000,this)">5<span class="won">만원</span></div>
+      <div class="chip-btn chip-purple" onclick="addBet(100000,this)">10<span class="won">만원</span></div>
+      <div class="chip-btn chip-black" onclick="addBet(500000,this)">50<span class="won">만원</span></div>
       <div class="bet-spacer"></div>
       <div class="bet-ctrl">
         <button class="bet-ctrl-btn btn-clear2" onclick="clearBet()">초기화</button>
@@ -888,14 +888,42 @@ function updateScore(who,hand,hide){
 }
 
 // ===== BETTING (individual chip tracking) =====
-function addBet(a){
+function addBet(a,btnEl){
   if(phase!==PHASE_BET)return;
   if(a>balance-bet)a=balance-bet;
   if(a<=0)return;
   bet+=a;
   betChips.push({amount:a});
-  updateBetLabel();updatePotChips();
+  updateBetLabel();
   document.getElementById('dealBtn').disabled=bet===0;
+  if(btnEl){flyChipToPot(a,btnEl)}else{updatePotChips()}
+}
+
+function flyChipToPot(amt,btnEl){
+  var cc=getChipColor(amt);
+  var from=btnEl.getBoundingClientRect();
+  var potEl=document.getElementById('betCircle');
+  var to=potEl.getBoundingClientRect();
+  var sz=from.width||42;
+  var fly=document.createElement('div');
+  fly.className='flying';
+  fly.style.cssText='position:fixed;width:'+sz+'px;height:'+sz+'px;border-radius:50%;z-index:999;pointer-events:none;'+
+    'border:3px solid '+cc.bdr+';background:'+cc.bg+';'+
+    'left:'+from.left+'px;top:'+from.top+'px;'+
+    'transition:left .35s cubic-bezier(.25,.46,.45,.94),top .35s cubic-bezier(.25,.46,.45,.94),transform .35s ease;'+
+    'box-shadow:0 3px 10px rgba(0,0,0,.5)';
+  var ring=document.createElement('div');
+  ring.style.cssText='position:absolute;inset:3px;border-radius:50%;border:2px dashed rgba(255,255,255,.3)';
+  fly.appendChild(ring);
+  document.body.appendChild(fly);
+  fly.offsetHeight;
+  fly.style.left=(to.left+to.width/2-sz/2)+'px';
+  fly.style.top=(to.top+to.height/2-sz/2)+'px';
+  fly.style.transform='scale(.7)';
+  setTimeout(function(){
+    try{fly.remove()}catch(e){}
+    updatePotChips();
+  },370);
 }
 function clearBet(){
   if(phase!==PHASE_BET)return;
@@ -967,7 +995,7 @@ function dealCardFromShoe(cardEl,targetContainer,delay,cb){
         peekEl.style.transition='';
       }
       if(cb)cb();
-    },420);
+    },400);
   },delay);
 }
 
@@ -988,13 +1016,13 @@ function startDeal(){
   var pC=document.getElementById('playerCards'),dC=document.getElementById('dealerCards');
 
   // Card 1: player face up
-  dealCardFromShoe(createCardEl(c1,false),pC,300,function(){updateScore('player',[c1])});
+  dealCardFromShoe(createCardEl(c1,false),pC,280,function(){updateScore('player',[c1])});
   // Card 2: dealer face up
-  dealCardFromShoe(createCardEl(c2,false),dC,700,function(){updateScore('dealer',dealerHand,true)});
+  dealCardFromShoe(createCardEl(c2,false),dC,650,function(){updateScore('dealer',dealerHand,true)});
   // Card 3: player face up
-  dealCardFromShoe(createCardEl(c3,false),pC,1100,function(){updateScore('player',playerHand)});
+  dealCardFromShoe(createCardEl(c3,false),pC,1020,function(){updateScore('player',playerHand)});
   // Card 4: dealer face down
-  dealCardFromShoe(createCardEl(c4,true),dC,1500,function(){updateScore('dealer',dealerHand,true)});
+  dealCardFromShoe(createCardEl(c4,true),dC,1400,function(){updateScore('dealer',dealerHand,true)});
 
   setTimeout(function(){
     gameActive=true;
@@ -1008,7 +1036,7 @@ function startDeal(){
       if(isBlackjack(dealerHand)){revealDealer(function(){say('딜러 블랙잭...');endRound('lose')});return}
     }
     enableActions();
-  },2100);
+  },1950);
 }
 
 // ===== ACTIONS =====
@@ -1061,9 +1089,9 @@ function dealerPlay(){
     var c=drawCard();dealerHand.push(c);
     dealCardFromShoe(createCardEl(c,false),document.getElementById('dealerCards'),0,function(){
       updateScore('dealer',dealerHand,false);say('딜러 히트');
-      setTimeout(dealerPlay,400);
+      setTimeout(dealerPlay,380);
     });
-  },600);
+  },550);
 }
 function resolveGame(){
   var p=cardValue(playerHand),d=cardValue(dealerHand);
@@ -1087,8 +1115,8 @@ function endRound(res){
   // Save chip info before bet resets
   var savedChips=betChips.slice(-4); // fly up to 4
 
-  setTimeout(function(){balance+=pay;updateBalance();renderHistory();tryFlyChips(res,savedChips)},1500);
-  setTimeout(function(){b.style.display='none';document.getElementById('potChips').innerHTML='';document.getElementById('betAmountLabel').textContent='';bet=0;betChips=[]},3000);
+  setTimeout(function(){balance+=pay;updateBalance();renderHistory();tryFlyChips(res,savedChips)},1400);
+  setTimeout(function(){b.style.display='none';document.getElementById('potChips').innerHTML='';document.getElementById('betAmountLabel').textContent='';bet=0;betChips=[]},2800);
   setTimeout(function(){
     document.querySelectorAll('.flying').forEach(function(e){try{e.remove()}catch(x){}});
     var cards=document.querySelectorAll('#dealerCards .card, #dealerCards .card-flip-container, #playerCards .card');
@@ -1100,7 +1128,7 @@ function endRound(res){
           var r=card.getBoundingClientRect();
           var cl=document.createElement('div');cl.className='card card-back flying';
           cl.innerHTML=CARD_BACK_HTML;
-          cl.style.cssText='position:fixed;z-index:998;width:'+r.width+'px;height:'+r.height+'px;left:'+r.left+'px;top:'+r.top+'px;transition:all .4s ease-in';
+          cl.style.cssText='position:fixed;z-index:998;width:'+r.width+'px;height:'+r.height+'px;left:'+r.left+'px;top:'+r.top+'px;transition:all .3s ease-in';
           document.body.appendChild(cl);card.style.visibility='hidden';cl.offsetHeight;
           cl.style.left=(tgt.left+tgt.width/2-r.width/2)+'px';
           cl.style.top=(tgt.top+tgt.height/2-r.height/2)+'px';
@@ -1109,7 +1137,7 @@ function endRound(res){
         }catch(e){}
       },i*100);
     });
-  },3500);
+  },3300);
 
   setTimeout(function(){
     document.querySelectorAll('.flying').forEach(function(e){try{e.remove()}catch(x){}});
@@ -1117,7 +1145,7 @@ function endRound(res){
     updateScore('dealer',null);updateScore('player',null);
     if(balance<1000){document.getElementById('gameoverOverlay').classList.add('show')}
     else{bet=0;betChips=[];updateBetLabel();updatePotChips();switchPhase(PHASE_BET);document.getElementById('dealBtn').disabled=true}
-  },4500);
+  },4200);
 }
 
 // Fly chips from the actual pot stack — stack visibly shrinks as each chip leaves
@@ -1145,7 +1173,7 @@ function tryFlyChips(res,chips){
             c.style.cssText='position:fixed;width:'+sz+'px;height:'+sz+'px;border-radius:50%;z-index:999;pointer-events:none;'+
               'border:2px solid '+cc.bdr+';'+
               'box-shadow:0 3px 12px rgba(0,0,0,.5),inset 0 2px 3px rgba(255,255,255,.15),inset 0 -2px 3px rgba(0,0,0,.2);'+
-              'transition:left .8s cubic-bezier(.25,.46,.45,.94),top .8s cubic-bezier(.25,.46,.45,.94),opacity .3s ease .5s,transform .8s ease;'+
+              'transition:left .7s cubic-bezier(.25,.46,.45,.94),top .7s cubic-bezier(.25,.46,.45,.94),opacity .28s ease .45s,transform .7s ease;'+
               'left:'+r.left+'px;top:'+r.top+'px;background:'+cc.bg;
             var ring=document.createElement('div');
             ring.style.cssText='position:absolute;inset:4px;border-radius:50%;border:2px dashed rgba(255,255,255,.3)';
@@ -1164,7 +1192,7 @@ function tryFlyChips(res,chips){
             c.style.opacity='0';c.style.transform='scale(.5)';
             setTimeout(function(){try{c.remove()}catch(e){}},1000);
           }catch(e){}
-        },idx*200);
+        },idx*180);
       })(i);
     }
   }catch(e){}
