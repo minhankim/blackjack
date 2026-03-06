@@ -6,8 +6,13 @@
 <title>Blackjack</title>
 <audio id="bgmLobby" loop preload="auto" src="1번.mp3" style="display:none"></audio>
 <audio id="bgmGame" loop preload="auto" src="2번.mp3" style="display:none"></audio>
-<link rel="icon" type="image/x-icon" href="https://minhankim.github.io/blackjack/favicon.ico">
-<link rel="shortcut icon" type="image/x-icon" href="https://minhankim.github.io/blackjack/blob/main/favicon.ico">
+<link rel="icon" type="image/x-icon" href="./favicon.ico">
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#1a3a1a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Blackjack">
+<link rel="apple-touch-icon" href="./icon-192.png">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;700;900&family=Oswald:wght@400;600;700&display=swap');
 *{margin:0;padding:0;box-sizing:border-box;user-select:none}
@@ -1449,6 +1454,11 @@ function fullReset(){
   updateBalance();updateScore('dealer',null);updateScore('player',null);renderHistory();
   document.getElementById('startScreen').classList.remove('hidden');
   if(window._startLobbyRetry)window._startLobbyRetry();startBGM('lobby');
+}
+</script>
+<script>
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('./sw.js').catch(function(){});
 }
 </script>
 </body>
