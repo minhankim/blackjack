@@ -1,4 +1,4 @@
-var CACHE_NAME = 'blackjack-v2';
+var CACHE_NAME = 'blackjack-v1';
 var urlsToCache = [
   './',
   './index.html',
