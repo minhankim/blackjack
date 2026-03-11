@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Blackjack</title>
+<audio id="bgmLobby" loop preload="auto" src="1번.mp3" style="display:none"></audio>
+<audio id="bgmGame" loop preload="auto" src="2번.mp3" style="display:none"></audio>
+<link rel="icon" type="image/x-icon" href="./favicon.ico">
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#1a3a1a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Blackjack">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<link rel="stylesheet" href="./style.css">
+</head>
+<body>
+
+<!-- START SCREEN -->
+<div class="start-screen" id="startScreen">
+  <div class="start-logo">BLACKJACK</div>
+  <div class="start-sub">LIVE CASINO</div>
+  <div class="start-dealer"><img src="딜러.jpg" alt="Dealer"></div>
+  <input class="start-input" id="nameInput" type="text" placeholder="이름을 입력하세요" maxlength="12" autofocus>
+  <div class="start-money">시작 자금: ₩1,000,000</div>
+  <button class="start-btn" onclick="startGame()">게임 시작</button>
+</div>
+
+<div class="game">
+  <div class="table-wrap">
+    <div class="spotlight"></div>
+    <div class="spotlight2"></div>
+    <div class="table-border"></div>
+    <div class="table-deco-left"></div>
+    <div class="table-deco-right"></div>
+    <div class="table-text">
+      <div class="ornament">&#10053; &#10053; &#10053;</div>
+      <div class="line1">DEALER MUST STAND ON ALL 17</div>
+      <div class="line2">INSURANCE PAYS 2 TO 1</div>
+      <div class="ornament">&#10053; &#10053; &#10053;</div>
+    </div>
+    <div class="hud-top-left"><div class="min-max">Min ₩1,000 / Max ₩500,000</div></div>
+    <button class="quit-btn" onclick="quitGame()">게임종료</button>
+
+    <div class="dealer-zone">
+      <div class="dealer-avatar"><img src="딜러.jpg" alt="Dealer"></div>
+      <div class="dealer-label">DEALER</div>
+    </div>
+
+    <!-- Card Shoe (Black dispenser, 45deg) -->
+    <div class="card-shoe">
+      <div class="shoe-body">
+        <div class="shoe-shell"></div>
+        <div class="shoe-felt"></div>
+        <div class="shoe-cards" id="shoeCards"></div>
+        <div class="shoe-peek-wrap" id="shoePeekCard">
+          <div class="shoe-peek-card">
+            <div class="pk-frame"></div>
+            <div class="pk-pattern"></div>
+            <div class="pk-diamond"></div>
+          </div>
+        </div>
+        <div class="shoe-plate"></div>
+        <div class="shoe-exit"></div>
+      </div>
+      <div class="shoe-label" id="shoeLabel">6 DECK</div>
+    </div>
+
+    <!-- Dealer cards -->
+    <div class="dealer-cards-zone">
+      <div class="card-area">
+        <div class="card-area-label">DEALER</div>
+        <div class="score-badge" id="dealerScore"></div>
+        <div class="cards-row" id="dealerCards"></div>
+      </div>
+    </div>
+    <div class="speech" id="speech"></div>
+    <div class="result-banner" id="resultBanner"></div>
+
+    <!-- Player -->
+    <div class="player-zone">
+      <div class="card-area">
+        <div class="card-area-label">PLAYER</div>
+        <div class="cards-row" id="playerCards"></div>
+        <div class="score-badge" id="playerScore"></div>
+      </div>
+      <div class="bet-circle" id="betCircle"><div class="chip-stack" id="potChips"></div></div>
+      <div class="bet-amount-label" id="betAmountLabel"></div>
+      <div class="player-info">
+        <div class="player-icon">&#128100;</div>
+        <div class="player-details">
+          <div class="player-name-tag" id="playerNameTag">Player</div>
+          <div class="player-balance" id="balanceDisplay">₩1,000,000</div>
+        </div>
+      </div>
+    </div>
+    <button class="recharge-btn" onclick="openPayment()">충전하기</button>
+
+    <!-- Payment Popup -->
+    <div class="pay-overlay" id="payOverlay" onclick="if(event.target===this)closePayment()">
+      <div class="pay-popup">
+        <div class="pay-header">
+          <span class="pay-header-title">칩 충전</span>
+          <button class="pay-close" onclick="closePayment()">&times;</button>
+        </div>
+        <div class="pay-body">
+          <div class="pay-amount-grid">
+            <div class="pay-amount-btn" onclick="selectPayAmount(this,500000)" data-amount="500000">₩500,000<span class="pay-won">50만원</span></div>
+            <div class="pay-amount-btn" onclick="selectPayAmount(this,1000000)" data-amount="1000000">₩1,000,000<span class="pay-won">100만원</span></div>
+            <div class="pay-amount-btn" onclick="selectPayAmount(this,3000000)" data-amount="3000000">₩3,000,000<span class="pay-won">300만원</span></div>
+            <div class="pay-amount-btn" onclick="selectPayAmount(this,5000000)" data-amount="5000000">₩5,000,000<span class="pay-won">500만원</span></div>
+          </div>
+          <div class="pay-divider"></div>
+          <div class="pay-method">
+            <div class="pay-method-btn selected" onclick="selectPayMethod(this)"><span class="pay-method-icon">💳</span>카드결제</div>
+            <div class="pay-method-btn" onclick="selectPayMethod(this)"><span class="pay-method-icon">🏦</span>계좌이체</div>
+            <div class="pay-method-btn" onclick="selectPayMethod(this)"><span class="pay-method-icon">📱</span>간편결제</div>
+          </div>
+          <div class="pay-divider"></div>
+          <div class="pay-total">
+            <span>결제 금액</span>
+            <span class="pay-total-amount" id="payTotalAmount">₩0</span>
+          </div>
+          <button class="pay-submit" onclick="submitPayment()">결제하기</button>
+        </div>
+      </div>
+    </div>
+    <div class="history" id="history"></div>
+
+    <div class="gameover" id="gameoverOverlay">
+      <h2>GAME OVER</h2>
+      <p>잔액이 부족합니다</p>
+      <button class="gameover-recharge-btn" onclick="openPayment()">충전하기</button>
+      <button class="gameover-reset-btn" onclick="fullReset()">다시 시작</button>
+    </div>
+  </div>
+
+  <div class="bottom-bar">
+    <div class="bet-bar" id="betBar">
+      <div class="chip-btn chip-teal" onclick="addBet(1000,this)">1<span class="won">천원</span></div>
+      <div class="chip-btn chip-blue" onclick="addBet(5000,this)">5<span class="won">천원</span></div>
+      <div class="chip-btn chip-red" onclick="addBet(10000,this)">1<span class="won">만원</span></div>
+      <div class="chip-btn chip-gold" onclick="addBet(50000,this)">5<span class="won">만원</span></div>
+      <div class="chip-btn chip-purple" onclick="addBet(100000,this)">10<span class="won">만원</span></div>
+      <div class="chip-btn chip-black" onclick="addBet(500000,this)">50<span class="won">만원</span></div>
+      <div class="bet-spacer"></div>
+      <div class="bet-ctrl">
+        <button class="bet-ctrl-btn btn-clear2" onclick="clearBet()">초기화</button>
+        <button class="bet-ctrl-btn btn-deal2" id="dealBtn" onclick="startDeal()" disabled>딜</button>
+      </div>
+    </div>
+    <div class="action-bar hidden" id="actionBar">
+      <button class="act-btn btn-double" id="btnDouble" onclick="doDouble()" disabled><span class="act-label"><span>DOUBLE</span><span class="act-sub">더블다운</span></span></button>
+      <button class="act-btn btn-split" id="btnSplit" onclick="doSplit()" disabled><span class="act-label"><span>SPLIT</span><span class="act-sub">스플릿</span></span></button>
+      <button class="act-btn btn-stand" id="btnStand" onclick="doStand()" disabled><span class="act-label"><span>STAND</span><span class="act-sub">스탠드</span></span></button>
+      <button class="act-btn btn-hit" id="btnHit" onclick="doHit()" disabled><span class="act-label"><span>HIT</span><span class="act-sub">히트</span></span></button>
+    </div>
+  </div>
+</div>
+
+<script src="./script.js"></script>
+</body>
+</html>
